@@ -1,11 +1,12 @@
 import PetrolTable from "./components/PetrolTable"
 import data from './assets/petrol_dataset.json' with { type: 'JSON' };
+import writeup from "./assets/petrol_writeup.html?raw";
 
 function Navigation({ children }: { children?: React.ReactNode }): React.ReactNode
 {
     return (
         <nav className="fixed w-full py-8 z-50">
-            <div className="mx-auto max-w-4xl bg-gray-950/66 border border-gray-700/50 
+            <div className="mx-auto max-w-4xl bg-gray-950/66 border border-gray-700/50
                             backdrop-blur-sm rounded-md p-2 shadow-md">
 
                 { children }
@@ -24,7 +25,7 @@ function MainContent({ children }: { children?: React.ReactNode }): React.ReactN
     )
 }
 
-function App() 
+function App()
 {
 
     return (
@@ -33,6 +34,7 @@ function App()
                 <p>Navigation Bar</p>
             </Navigation>
             <MainContent>
+                <article className="petrol-writeup" dangerouslySetInnerHTML={ { __html: writeup } }/>
                 <PetrolTable data={data} />
             </MainContent>
             <div className="min-h-dvh"/>
