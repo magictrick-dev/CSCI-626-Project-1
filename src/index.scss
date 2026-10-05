@@ -11,11 +11,11 @@ $ref-gallons-gdp-can-buy: #d946ef;
 $ref-consumption-multiplier: #ec4899;
 
 
-.petrol-writeup {
+#petrol-writeup {
 	font-size: 1rem;
 	line-height: 1.7;
 
-	p {
+	> p {
 		margin-bottom: 1.5rem;
 	}
 
@@ -30,37 +30,37 @@ $ref-consumption-multiplier: #ec4899;
 			color 120ms ease,
 			text-decoration-color 120ms ease;
 
-		&[data-reference-cell$=",0"] {	//Rank
+		&[data-reference-cell$=",1"] {	//Rank
 			--ref-color: #{$ref-rank};
 		}
-		&[data-reference-cell$=",1"] {	//Country
+		&[data-reference-cell$=",2"] {	//Country
 			--ref-color: #{$ref-country};
 		}
-		&[data-reference-cell$=",2"] {	//Daily oil consumption (barrels)
+		&[data-reference-cell$=",3"] {	//Daily oil consumption (barrels)
 			--ref-color: #{$ref-oil-consumption};
 		}
-		&[data-reference-cell$=",3"] {	//World share (%)
+		&[data-reference-cell$=",4"] {	//World share (%)
 			--ref-color: #{$ref-world-share};
 		}
-		&[data-reference-cell$=",4"] {	//Yearly gallons per capita
+		&[data-reference-cell$=",5"] {	//Yearly gallons per capita
 			--ref-color: #{$ref-gallons-per-capita};
 		}
-		&[data-reference-cell$=",5"] {	//Price per gallon (USD)
+		&[data-reference-cell$=",6"] {	//Price per gallon (USD)
 			--ref-color: #{$ref-price-per-gallon};
 		}
-		&[data-reference-cell$=",6"] {	//Price per liter (USD)
+		&[data-reference-cell$=",7"] {	//Price per liter (USD)
 			--ref-color: #{$ref-price-per-liter-usd};
 		}
-		&[data-reference-cell$=",7"] {	//Price per liter (PKR)
+		&[data-reference-cell$=",8"] {	//Price per liter (PKR)
 			--ref-color: #{$ref-price-per-liter-pkr};
 		}
-		&[data-reference-cell$=",8"] {	//GDP per capita (USD)
+		&[data-reference-cell$=",9"] {	//GDP per capita (USD)
 			--ref-color: #{$ref-gdp-per-capita};
 		}
-		&[data-reference-cell$=",9"] {	//Gallons GDP per capita can buy
+		&[data-reference-cell$=",10"] {	//Gallons GDP per capita can buy
 			--ref-color: #{$ref-gallons-gdp-can-buy};
 		}
-		&[data-reference-cell$=",10"] {	//X times yearly gallons per capita buy
+		&[data-reference-cell$=",11"] {	//X times yearly gallons per capita buy
 			--ref-color: #{$ref-consumption-multiplier};
 		}
 
