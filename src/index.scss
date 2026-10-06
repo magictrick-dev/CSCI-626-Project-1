@@ -9,7 +9,19 @@ $ref-price-per-liter-pkr: #6366f1;
 $ref-gdp-per-capita: #8b5cf6;
 $ref-gallons-gdp-can-buy: #d946ef;
 $ref-consumption-multiplier: #ec4899;
-
+$col-colors: (
+	1: $ref-rank,
+	2: $ref-country,
+	3: $ref-oil-consumption,
+	4: $ref-world-share,
+	5: $ref-gallons-per-capita,
+	6: $ref-price-per-gallon,
+	7: $ref-price-per-liter-usd,
+	8: $ref-price-per-liter-pkr,
+	9: $ref-gdp-per-capita,
+	10: $ref-gallons-gdp-can-buy,
+	11: $ref-consumption-multiplier,
+);
 
 #petrol-writeup {
 	font-size: 1rem;
@@ -63,6 +75,10 @@ $ref-consumption-multiplier: #ec4899;
 		&[data-reference-cell$=",11"] {	//X times yearly gallons per capita buy
 			--ref-color: #{$ref-consumption-multiplier};
 		}
+		&[data-reference-rows],
+		&[data-reference-columns] {
+			--ref-color: #3f3f3f;
+		}
 
 		&:hover {
 			color: var(--ref-color);
@@ -72,4 +88,11 @@ $ref-consumption-multiplier: #ec4899;
 			text-decoration-style: solid;
 		}
 	}
+}
+//Temp placement for highlight demo
+td[data-highlighted] {
+	background-color: color-mix(in srgb, var(--col-color) 25%, transparent);
+}
+@each $col, $color in $col-colors {
+	td[data-col="#{$col}"] { --col-color: #{$color}; }
 }

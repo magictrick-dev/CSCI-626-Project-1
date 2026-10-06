@@ -36,6 +36,35 @@ function FooterContent({ children }: { children?: React.ReactNode }): React.Reac
 
 }
 
+function HighlightTest()
+{
+    return (
+        <div className="my-8 overflow-x-auto">
+            <h2 className="text-xl font-bold mb-4">
+                Highlight test
+            </h2>
+
+            <table className="w-full border-collapse">
+                <tbody>
+                    <tr>
+                        <td data-col="1" data-highlighted>Column 1</td>
+                        <td data-col="2" data-highlighted>Column 2</td>
+                        <td data-col="3" data-highlighted>Column 3</td>
+                        <td data-col="4" data-highlighted>Column 4</td>
+                        <td data-col="5" data-highlighted>Column 5</td>
+                        <td data-col="6" data-highlighted>Column 6</td>
+                        <td data-col="7" data-highlighted>Column 7</td>
+                        <td data-col="8" data-highlighted>Column 8</td>
+                        <td data-col="9" data-highlighted>Column 9</td>
+                        <td data-col="10" data-highlighted>Column 10</td>
+                        <td data-col="11" data-highlighted>Column 11</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    );
+}
+
 function App()
 {
 
@@ -47,6 +76,7 @@ function App()
             <MainContent>
                 <Article/>
                 <PetrolTable data={data} />
+				<HighlightTest />
             </MainContent>
             <FooterContent>
 
