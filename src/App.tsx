@@ -1,11 +1,11 @@
-import PetrolTable from "./components/PetrolTable"
+import PetrolTable from './components/PetrolTable';
+import Article from './components/Article';
 import data from './assets/petrol_dataset.json' with { type: 'JSON' };
-import writeup from "./assets/petrol_writeup.html?raw";
 
 function Navigation({ children }: { children?: React.ReactNode }): React.ReactNode
 {
     return (
-        <nav className="fixed w-full py-8 z-50">
+        <nav className="fixed w-full py-8 z-40">
             <div className="mx-auto max-w-4xl bg-gray-950/66 border border-gray-700/50
                             backdrop-blur-sm rounded-md p-2 shadow-md">
 
@@ -19,10 +19,21 @@ function Navigation({ children }: { children?: React.ReactNode }): React.ReactNo
 function MainContent({ children }: { children?: React.ReactNode }): React.ReactNode
 {
     return (
-        <div className="max-w-6xl mx-auto pt-32 p-2">
+        <div className="max-w-6xl mx-auto pt-32 p-2 mb-16">
             { children }
         </div>
     )
+}
+
+function FooterContent({ children }: { children?: React.ReactNode }): React.ReactNode
+{
+
+    return (
+        <footer className="py-4 bg-gray-950 min-h-120">
+            { children }
+        </footer>
+    );
+
 }
 
 function App()
@@ -34,10 +45,12 @@ function App()
                 <p>Navigation Bar</p>
             </Navigation>
             <MainContent>
-                <article className="petrol-writeup" dangerouslySetInnerHTML={ { __html: writeup } }/>
+                <Article/>
                 <PetrolTable data={data} />
             </MainContent>
-            <div className="min-h-dvh"/>
+            <FooterContent>
+
+            </FooterContent>
         </div>
     )
 
