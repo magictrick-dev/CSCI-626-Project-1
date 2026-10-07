@@ -23,6 +23,11 @@ $col-colors: (
 	11: $ref-consumption-multiplier,
 );
 
+//Keeps scroll targets (the navigation's jump buttons) clear of the sticky navigation bar
+html {
+	scroll-padding-top: 6rem;
+}
+
 #petrol-writeup {
 	font-size: 1rem;
 	line-height: 1.7;
@@ -90,11 +95,6 @@ $col-colors: (
 	}
 }
 
-.reference-highlight {
-	outline: 2px solid white;
-	outline-offset: -2px;
-}
-
 .back-to-article {
     position: fixed;
     z-index: 100;
@@ -125,9 +125,15 @@ $col-colors: (
     transform: translateY(-50%) translateX(2px);
 }
 
-//Temp placement for highlight demo
-td[data-highlighted] {
+//Referenced cells share one tint, whether shown in a hover snippet (data-highlighted)
+//or in the table after a click-to-jump (.reference-highlight)
+td[data-highlighted],
+td.reference-highlight {
 	background-color: color-mix(in srgb, var(--col-color) 25%, transparent);
+}
+//Whole-row references span every column, so they get a neutral tint instead of a band of column colors
+td.reference-highlight.reference-row {
+	--col-color: white;
 }
 @each $col, $color in $col-colors {
 	td[data-col="#{$col}"] { --col-color: #{$color}; }

@@ -1,6 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useLayoutEffect, useRef } from 'react';
+import data from '../assets/petrol_dataset.json' with { type: 'JSON' };
 import '../index.css'
 import '../index.scss'
+
+type RowType = typeof data[0];
 
 export type DataReference = {
     rows?: string;
@@ -14,6 +17,112 @@ export type DataRefHover = {
     y: number;
 }
 
+const numberFormat = new Intl.NumberFormat('en-US');
+
+// Short labels and display formats for each table column. Index + 1 is the column
+// number used by the table's cell ids (cell-{row}-{column}) and the data-reference attributes.
+const snippetColumns: { label: string, format: (row: RowType) => string }[] = [
+    { label: '#',            format: (row) => String(row.rank) },
+    { label: 'Country',      format: (row) => row.country },
+    { label: 'Barrels/day',  format: (row) => numberFormat.format(row.dailyOilConsumptionBarrels) },
+    { label: 'World share',  format: (row) => `${ row.worldSharePercent }%` },
+    { label: 'Gal/capita',   format: (row) => numberFormat.format(row.yearlyGallonsPerCapita) },
+    { label: '$/gal',        format: (row) => `$${ row.pricePerGallonUsd.toFixed(2) }` },
+    { label: '$/liter',      format: (row) => `$${ row.pricePerLiterUsd.toFixed(2) }` },
+    { label: 'PKR/liter',    format: (row) => row.pricePerLiterPkr.toFixed(2) },
+    { label: 'GDP/capita',   format: (row) => `$${ numberFormat.format(row.gdpPerCapitaUsd) }` },
+    { label: 'Gal GDP buys', format: (row) => numberFormat.format(row.gallonsGdpPerCapitaCanBuy) },
+    { label: 'x Yearly use', format: (row) => `${ row.xTimesYearlyGallonsPerCapitaBuy }×` },
+];
+
+// Rank and Country identify a row, so every snippet shows them ahead of the data columns.
+const IDENTIFIER_COLUMNS = [1, 2];
+const FIRST_DATA_COLUMN = 3;
+const LAST_DATA_COLUMN = snippetColumns.length;
+
+// Larger references are cut down to this many rows and data columns so the
+// tooltip doesn't bury the paragraph underneath it.
+const MAX_SNIPPET_ROWS = 5;
+const MAX_SNIPPET_COLUMNS = 4;
+
+// Lists an inclusive range for display. A range longer than the limit keeps its first
+// (limit - 1) values and its last value, with null standing in for the skipped middle.
+function truncateRange(start: number, end: number, limit: number)
+{
+    const count = end - start + 1;
+
+    if (count <= limit)
+    {
+        const values = Array.from({ length: Math.max(count, 0) }, (_, i) => start + i);
+        return { values, skipped: 0 };
+    }
+
+    const head = Array.from({ length: limit - 1 }, (_, i) => start + i);
+    return { values: [ ...head, null, end ], skipped: count - limit };
+}
+
+type TableSnippetProps = {
+    rows: [number, number];
+    columns: [number, number];
+    highlight: boolean;
+}
+
+// A miniature, truncated slice of the petrol table. When highlight is set, the
+// referenced columns are tinted with their column color.
+function TableSnippet({ rows, columns, highlight }: TableSnippetProps)
+{
+    const [rowStart, rowEnd] = rows;
+    const [columnStart, columnEnd] = columns;
+
+    const shownRows = truncateRange(rowStart, rowEnd, MAX_SNIPPET_ROWS);
+    const shownColumns = truncateRange(
+        Math.max(columnStart, FIRST_DATA_COLUMN),
+        Math.min(columnEnd, LAST_DATA_COLUMN),
+        MAX_SNIPPET_COLUMNS
+    );
+    const columnLayout = [ ...IDENTIFIER_COLUMNS, ...shownColumns.values ];
+
+    const isReferenced = (column: number) => highlight && column >= columnStart && column <= columnEnd;
+    const alignment = (column: number) => column === 2 ? 'text-left' : 'text-right';
+
+    return (
+        <table className="mt-1 text-xs tabular-nums whitespace-nowrap">
+            <thead>
+                <tr className="text-gray-400">
+                    { columnLayout.map((column) => column === null
+                        ? <th key="gap" className="px-1.5 py-0.5 font-normal">+{ shownColumns.skipped }</th>
+                        : <th key={ column } className={ `px-1.5 py-0.5 font-normal ${ alignment(column) }` }>
+                              { snippetColumns[column - 1].label }
+                          </th>
+                    ) }
+                </tr>
+            </thead>
+            <tbody>
+                { shownRows.values.map((rank) => rank === null
+                    ? (
+                        <tr key="gap">
+                            <td colSpan={ columnLayout.length } className="px-1.5 py-0.5 text-center text-gray-400">
+                                ⋯ { shownRows.skipped } more rows ⋯
+                            </td>
+                        </tr>
+                    )
+                    : (
+                        <tr key={ rank } className="odd:bg-gray-900/60">
+                            { columnLayout.map((column) => column === null
+                                ? <td key="gap" className="px-1.5 py-0.5 text-center text-gray-400">⋯</td>
+                                : <td key={ column } className={ `px-1.5 py-0.5 ${ alignment(column) }` }
+                                      data-col={ column } data-highlighted={ isReferenced(column) || undefined }>
+                                      { snippetColumns[column - 1].format(data[rank - 1]) }
+                                  </td>
+                            ) }
+                        </tr>
+                    )
+                ) }
+            </tbody>
+        </table>
+    )
+}
+
 // data-reference-rows="start:end"
 function RowsTooltip({ rows }: { rows: string })
 {
@@ -21,8 +130,8 @@ function RowsTooltip({ rows }: { rows: string })
 
     return (
         <>
-            <p className="font-semibold">Rows</p>
-            <p>{ start } to { end }</p>
+            <p className="font-semibold">Rows { start } to { end }</p>
+            <TableSnippet rows={ [start, end] } columns={ [FIRST_DATA_COLUMN, LAST_DATA_COLUMN] } highlight={ false } />
         </>
     )
 }
@@ -34,8 +143,8 @@ function ColumnsTooltip({ columns }: { columns: string })
 
     return (
         <>
-            <p className="font-semibold">Columns</p>
-            <p>{ start } to { end }</p>
+            <p className="font-semibold">{ start === end ? `Column ${ start }` : `Columns ${ start } to ${ end }` }</p>
+            <TableSnippet rows={ [1, data.length] } columns={ [start, end] } highlight />
         </>
     )
 }
@@ -47,8 +156,8 @@ function CellTooltip({ cell }: { cell: string })
 
     return (
         <>
-            <p className="font-semibold">Cell</p>
-            <p>Row { row }, Column { column }</p>
+            <p className="font-semibold">Row { row }, Column { column }</p>
+            <TableSnippet rows={ [row, row] } columns={ [column, column] } highlight />
         </>
     )
 }
@@ -56,44 +165,57 @@ function CellTooltip({ cell }: { cell: string })
 // Positions the tooltip above the cursor and picks the body for the reference type.
 function ArticleTooltip({ reference, x, y }: DataRefHover)
 {
+    const tooltipRef = useRef<HTMLDivElement>(null);
+    const [size, setSize] = useState({ width: 0, height: 0 });
+
+    // Measure each new snippet so it can be kept on screen. Layout effects run
+    // before paint, so the unmeasured first position is never visible.
+    useLayoutEffect(() =>
+    {
+        if (tooltipRef.current)
+        {
+            setSize({ width: tooltipRef.current.offsetWidth, height: tooltipRef.current.offsetHeight });
+        }
+    }, [reference.rows, reference.columns, reference.cell]);
+
+    let body: React.ReactNode;
 
     if (reference.rows)
     {
-        return (
-            <div className="fixed z-50 pointer-events-none -translate-x-1/2 -translate-y-full backdrop-blur-md
-                            bg-gray-950/30 border border-gray-700/66 rounded-md shadow-md p-2 text-sm"
-                style={{ left: x, top: y - 12 }}>
-
-                <RowsTooltip rows={ reference.rows } />
-            </div>
-        )
+        body = <RowsTooltip rows={ reference.rows } />;
     }
 
     else if (reference.columns)
     {
-        return (
-            <div className="fixed z-50 pointer-events-none -translate-x-1/2 -translate-y-full backdrop-blur-md
-                            bg-gray-950/30 border border-gray-700/66 rounded-md shadow-md p-2 text-sm"
-                 style={{ left: x, top: y - 12 }}>
-
-                <ColumnsTooltip columns={ reference.columns } />
-            </div>
-        )
-
+        body = <ColumnsTooltip columns={ reference.columns } />;
     }
 
     else if (reference.cell)
     {
-        return (
-            <div className="fixed z-50 pointer-events-none -translate-x-1/2 -translate-y-full backdrop-blur-md
-                            bg-gray-950/30 border border-gray-700/66 rounded-md shadow-md p-2 text-sm"
-                 style={{ left: x, top: y - 12 }}>
-
-                <CellTooltip cell={ reference.cell } />
-            </div>
-        )
+        body = <CellTooltip cell={ reference.cell } />;
     }
 
+    else
+    {
+        return null;
+    }
+
+    // Center above the cursor, clamped to the viewport's edges, and flip below
+    // the cursor when there isn't room above it.
+    const margin = 8;
+    const left = Math.max(margin, Math.min(x - size.width / 2, window.innerWidth - size.width - margin));
+    const above = y - 12 - size.height;
+    const top = above >= margin ? above : y + 20;
+
+    return (
+        <div ref={ tooltipRef }
+             className="fixed z-50 w-max pointer-events-none backdrop-blur-md
+                        bg-gray-950/30 border border-gray-700/66 rounded-md shadow-md p-2 text-sm"
+             style={{ left, top }}>
+
+            { body }
+        </div>
+    )
 }
 
 function ArticleParagraph({ children }: { children: React.ReactNode })
@@ -103,6 +225,15 @@ function ArticleParagraph({ children }: { children: React.ReactNode })
             { children }
         </p>
     )
+}
+
+// Strips the tint from every table cell highlighted by a previous reference click.
+function clearReferenceHighlights()
+{
+    document.querySelectorAll('.reference-highlight').forEach((cell) =>
+    {
+        cell.classList.remove('reference-highlight', 'reference-row');
+    });
 }
 
 function Article()
@@ -173,10 +304,7 @@ function Article()
         setArticleReference(span);
 
         // Remove previous highlights
-        document.querySelectorAll('.reference-highlight').forEach((cell) =>
-        {
-            cell.classList.remove('reference-highlight');
-        });
+        clearReferenceHighlights();
 
         let cellIds: string[] = [];
 
@@ -222,14 +350,17 @@ function Article()
             }
         }
 
-        // Highlight all referenced cells
+        // Highlight all referenced cells. Cells and columns are tinted with their column
+        // color like the hover snippets; whole rows get a neutral tint (.reference-row).
+        const highlightClasses = rows ? ['reference-highlight', 'reference-row'] : ['reference-highlight'];
+
         cellIds.forEach((id) =>
         {
             const tableCell = document.getElementById(id);
 
             if (tableCell)
             {
-                tableCell.classList.add('reference-highlight');
+                tableCell.classList.add(...highlightClasses);
             }
         });
 
@@ -306,8 +437,14 @@ function Article()
                             block: 'center',
                             inline: 'center'
                         });
+
+                        // Clear the highlights first: as the page scrolls back up, the table
+                        // slides under the cursor and would re-trigger the hover handler on
+                        // any still-highlighted cell, bringing the button right back.
+                        clearReferenceHighlights();
                         setBackToArticle(null);
-                    }} 
+                        setArticleReference(null);
+                    }}
                 >
                     Back to Article
                 </button>
