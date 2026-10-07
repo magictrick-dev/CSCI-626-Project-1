@@ -1,4 +1,15 @@
-// Raw values pulled from a .data-ref span's data-reference-* attributes.
-// Only the attributes present on the hovered span are defined.
+export type DataReference = {
+    rows?: string;
+    columns?: string;
+    cell?: string;
+};
 
-export default DataRefTooltip;
+export type DataRefHover = {
+    reference: DataReference;
+    x: number;
+    y: number;
+};
+
+export default function DataRefTooltip(): null {
+    return null;
+}

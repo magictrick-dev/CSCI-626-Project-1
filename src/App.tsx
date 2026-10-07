@@ -2,6 +2,7 @@ import PetrolTable from './components/PetrolTable';
 import Article from './components/Article';
 import data from './assets/petrol_dataset.json' with { type: 'JSON' };
 
+/*
 function Navigation({ children }: { children?: React.ReactNode }): React.ReactNode
 {
     return (
@@ -15,6 +16,7 @@ function Navigation({ children }: { children?: React.ReactNode }): React.ReactNo
         </nav>
     )
 }
+*/
 
 function MainContent({ children }: { children?: React.ReactNode }): React.ReactNode
 {
@@ -70,9 +72,9 @@ function App()
 
     return (
         <div data-theme="dark" className="min-h-dvh bg-white text-black dark:bg-gray-900 dark:text-white">
-            <Navigation>
+            {/* <Navigation>
                 <p>Navigation Bar</p>
-            </Navigation>
+            </Navigation> */}
             <MainContent>
                 <Article/>
                 <PetrolTable data={data} />

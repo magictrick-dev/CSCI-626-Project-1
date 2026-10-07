@@ -89,6 +89,42 @@ $col-colors: (
 		}
 	}
 }
+
+.reference-highlight {
+	outline: 2px solid white;
+	outline-offset: -2px;
+}
+
+.back-to-article {
+    position: fixed;
+    z-index: 100;
+
+    transform: translateY(-50%);
+
+    padding: 0.5rem 0.75rem;
+
+    background-color: #171717;
+    color: white;
+
+    border: 1px solid #525252;
+    border-radius: 0.5rem;
+
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+
+    cursor: pointer;
+
+    white-space: nowrap;
+
+    transition:
+        background-color 120ms ease,
+        transform 120ms ease;
+}
+
+.back-to-article:hover {
+    background-color: #262626;
+    transform: translateY(-50%) translateX(2px);
+}
+
 //Temp placement for highlight demo
 td[data-highlighted] {
 	background-color: color-mix(in srgb, var(--col-color) 25%, transparent);

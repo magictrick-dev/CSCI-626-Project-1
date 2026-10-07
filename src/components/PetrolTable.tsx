@@ -6,16 +6,17 @@ function PetrolTableRow({ data }: { data: RowType })
 {
     return (
         <tr className="odd:bg-gray-900">
-            <td className="px-2 py-1">{ data.rank }</td>
-            <td className="px-2 py-1">{ data.country }</td>
-            <td className="px-2 py-1">{ data.dailyOilConsumptionBarrels }</td>
-            <td className="px-2 py-1">{ data.worldSharePercent }</td>
-            <td className="px-2 py-1">{ data.yearlyGallonsPerCapita }</td>
-            <td className="px-2 py-1">{ data.pricePerGallonUsd }</td>
-            <td className="px-2 py-1">{ data.pricePerLiterPkr }</td>
-            <td className="px-2 py-1">{ data.gdpPerCapitaUsd }</td>
-            <td className="px-2 py-1">{ data.gallonsGdpPerCapitaCanBuy }</td>
-            <td className="px-2 py-1">{ data.xTimesYearlyGallonsPerCapitaBuy }</td>
+            <td id={`cell-${data.rank}-1`} className="px-2 py-1">{ data.rank }</td>
+            <td id={`cell-${data.rank}-2`} className="px-2 py-1">{ data.country }</td>
+            <td id={`cell-${data.rank}-3`} className="px-2 py-1">{ data.dailyOilConsumptionBarrels }</td>
+            <td id={`cell-${data.rank}-4`} className="px-2 py-1">{ data.worldSharePercent }</td>
+            <td id={`cell-${data.rank}-5`} className="px-2 py-1">{ data.yearlyGallonsPerCapita }</td>
+            <td id={`cell-${data.rank}-6`} className="px-2 py-1">{ data.pricePerGallonUsd }</td>
+            <td id={`cell-${data.rank}-7`} className="px-2 py-1">{ data.pricePerLiterUsd }</td>
+            <td id={`cell-${data.rank}-8`} className="px-2 py-1">{ data.pricePerLiterPkr }</td>
+            <td id={`cell-${data.rank}-9`} className="px-2 py-1">{ data.gdpPerCapitaUsd }</td>
+            <td id={`cell-${data.rank}-10`} className="px-2 py-1">{ data.gallonsGdpPerCapitaCanBuy }</td>
+            <td id={`cell-${data.rank}-11`} className="px-2 py-1">{ data.xTimesYearlyGallonsPerCapitaBuy }</td>
         </tr>
     )
 }
@@ -26,20 +27,21 @@ function PetrolTable({ data }: { data: TableType })
         <div className="w-full min-h-40 max-h-dvh overflow-y-scroll scrollbar-thumb-gray-800
                       bg-gray-950 rounded-lg border border-gray-700/66 shadow-md">
             <table className="table-auto">
-                <thead>
+                <thead className="sticky top-0 z10 bg-gray-950">
                     <td className="px-2 py-1">#</td>
                     <td className="px-2 py-1">Country</td>
                     <td className="px-2 py-1">Daily Oil Consumptions (Barrels)</td>
                     <td className="px-2 py-1">World Share Percentage</td>
                     <td className="px-2 py-1">Yearly Gallons per Capita</td>
                     <td className="px-2 py-1">Price/Gallon (USD)</td>
+                    <td className="px-2 py-1">Price/Liter (USD)</td>
                     <td className="px-2 py-1">Price/Liter (PKR)</td>
                     <td className="px-2 py-1">GDP/Capita (USD)</td>
                     <td className="px-2 py-1">Gallons GDP per Capita Purchasable</td>
                     <td className="px-2 py-1">X Times Yearly Gallons per Capita Purchasable</td>
                 </thead>
                 <tbody>
-                    { data.map((row) => (<PetrolTableRow data={row}></PetrolTableRow>)) }
+                    { data.map((row) => (<PetrolTableRow key={row.rank} data={row}></PetrolTableRow>)) }
                 </tbody>
             </table>
         </div>
