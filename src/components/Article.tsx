@@ -141,7 +141,7 @@ function Article()
             document.removeEventListener('mouseover', handleTableHover);
         };
     }, []);
-    
+
     // One delegated handler for every .data-ref span inside the article.
     function handleMouseMove(event: React.MouseEvent<HTMLDivElement>)
     {
@@ -259,7 +259,7 @@ function Article()
                 { hover && <ArticleTooltip { ...hover } /> }
 
                 <h1 className="font-thin text-6xl pb-2">Gas Price Analysis by Country</h1>
-                <h3 className="font-semibold text-xl pb-8">Written by Claude, Anthropic, October 2026</h3>
+                <h3 className="font-semibold text-xl pb-8">Written by Claude, Anthropic, September 26th, 2026</h3>
 
                 <ArticleParagraph>
                     This dataset is a snapshot of petrol markets across <span className="data-ref" data-reference-rows="1:181">181 countries and territories</span>, dated June 23, 2022, a moment when fuel prices were already under heavy global pressure. Each row describes one economy through <span className="data-ref" data-reference-columns="3:11">nine measurements</span>: how much oil it burns each day, its share of world consumption, its yearly gallons per person, several expressions of the pump price, its income per person, and two derived affordability figures. The table is ordered by total consumption, so the story begins at the top with the two heavyweights. The <span className="data-ref" data-reference-cell="1,2">United States</span> consumes <span className="data-ref" data-reference-cell="1,3">19,687,287 barrels</span> of oil per day, which is <span className="data-ref" data-reference-cell="1,4">20%</span> of the world total. <span className="data-ref" data-reference-cell="2,2">China</span> follows with <span className="data-ref" data-reference-cell="2,3">12,791,553 barrels</span> and a <span className="data-ref" data-reference-cell="2,4">13%</span> share. Taken together, <span className="data-ref" data-reference-rows="1:2">the first two rows</span> account for roughly a third of all the oil consumed by the countries in the table, a concentration that sets the tone for everything else.
@@ -307,7 +307,7 @@ function Article()
                             inline: 'center'
                         });
                         setBackToArticle(null);
-                    }} 
+                    }}
                 >
                     Back to Article
                 </button>
