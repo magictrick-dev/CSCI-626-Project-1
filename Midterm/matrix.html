@@ -14,6 +14,9 @@
 		const NUM_ROWS = 30, NUM_COLS = 40, PULL_THRESHOLD = 20;
 		const matrix = Array.from({ length: NUM_ROWS }, () =>
 			Array.from({ length: NUM_COLS }, () => Math.floor(Math.random() * 100)));	// 0-99 matrix[row][col]
+        
+        // save a copy of the prginal tsble for reseting
+        const originalMatrix = matrix.map((row) => [...row]);
 
 		const thead = document.querySelector("thead");
 		const tbody = document.querySelector("tbody");
@@ -60,6 +63,87 @@
 			};
 			th.onpointerup = () => { th.onpointermove = null; th.onpointerup = null; };	//Clean after letting go
 		}
+
+        // add keyboard functionality 
+
+        function refreshTableDOM() {
+            matrix.forEach((values, row) => {
+                const tr = rowElements[row];
+                const tds = tr.querySelectorAll("td");
+                values.forEach((value, col) => {
+                    tds[col].textContent = value;
+                    tds[col].style.background = `hsl(210, 70%, ${95 - value * 0.5}%)`;
+                });
+            });
+        }
+
+        function sortAllColumns(direction) {
+            for (let c = 0; c < NUM_COLS; c++) {
+                const colValues = matrix.map(row => row[c]).sort((a, b) => direction * (a - b));
+                matrix.forEach((row, r) => { row[c] = colValues[r]; });
+            }
+            refreshTableDOM();
+        }
+
+        function sortAllRows(direction) {
+            matrix.forEach(row => {
+                row.sort((a, b) => direction * (a - b));
+            });
+            refreshTableDOM();
+        }
+
+        function sortAll(direction) {
+            const allValues = matrix.flat().sort((a, b) => direction * (a - b));
+            let index = 0;
+            for (let r = 0; r < NUM_ROWS; r++) {
+                for (let c = 0; c < NUM_COLS; c++) {
+                    matrix[r][c] = allValues[index++];
+                }
+            }
+            const originalOrder = Array.from({ length: NUM_ROWS }, (_, i) => i);
+            tbody.append(...originalOrder.map((row) => rowElements[row]));
+            refreshTableDOM();
+        }
+
+        function resetTable() {
+            for (let r = 0; r < NUM_ROWS; r++) {
+                for (let c = 0; c < NUM_COLS; c++) {
+                    matrix[r][c] = originalMatrix[r][c];
+                }
+            }
+            const originalOrder = Array.from({ length: NUM_ROWS }, (_, i) => i);
+            tbody.append(...originalOrder.map((row) => rowElements[row]));
+            refreshTableDOM();
+        }
+
+        // keyboard listener
+        document.addEventListener("keydown", (event) => {
+            switch (event.key) {
+                case "ArrowUp":
+                    sortAllColumns(1);
+                    break;
+                case "ArrowDown":
+                    sortAllColumns(-1);
+                    break;
+                case "ArrowLeft":
+                    sortAllRows(-1);
+                    break;
+                case "ArrowRight":
+                    sortAllRows(1);
+                    break;
+                case "a":
+                    sortAll(1);
+                    break;
+                case "d":
+                    sortAll(-1);
+                    break;
+                case "Escape":
+                    resetTable();
+                    break;
+            }
+        });
+
+
 	</script>
 </body>
 </html>
