@@ -1,1 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Matrix</title>
+</head>
+<body>
+	<table>
+		<thead></thead>
+		<tbody></tbody>
+	</table>
+	<script>
+		const NUM_ROWS = 30, NUM_COLS = 40, PULL_THRESHOLD = 20;
+		const matrix = Array.from({ length: NUM_ROWS }, () =>
+			Array.from({ length: NUM_COLS }, () => Math.floor(Math.random() * 100)));	// 0-99 matrix[row][col]
+
+		const thead = document.querySelector("thead");
+		const tbody = document.querySelector("tbody");
+
+		const headerRow = thead.insertRow();
+		headerRow.insertCell().outerHTML = "<th></th>";
+		for (let col = 0; col < NUM_COLS; col++) {
+			const th = document.createElement("th");
+			th.textContent = "Col" + (col + 1);
+			th.addEventListener("pointerdown", (event) => startPull(event, th, col));
+			headerRow.append(th);
+		}
+
+		const rowElements = matrix.map((values, row) => {
+			const tr = tbody.insertRow();
+			const label = document.createElement("th");
+			label.textContent = "Row" + (row + 1);
+			tr.append(label);
+			values.forEach((value) => {
+				const td = tr.insertCell();
+				td.textContent = value;
+				td.style.background = `hsl(210, 70%, ${95 - value * 0.5}%)`;
+			});
+			return tr;
+		});
+
+		function sortRowsByColumn(col, direction) {
+			const order = matrix.map((_, row) => row).sort((a, b) => direction * (matrix[a][col] - matrix[b][col]) || a - b);	//Direction 1 ascending, -1 descending
+			tbody.append(...order.map((row) => rowElements[row]));
+		}
+
+		function startPull(event, th, col) {
+			const startY = event.clientY;
+			let lastDirection = 0;
+			th.setPointerCapture(event.pointerId);
+
+			th.onpointermove = (moveEvent) => {
+				const pull = moveEvent.clientY - startY;
+				const direction = pull > PULL_THRESHOLD ? 1 : pull < -PULL_THRESHOLD ? -1 : 0;	//Direction 1 ascending (pull down), -1 descending (pull up), 0 (pull nowhere or left/right)
+				if (direction !== 0 && direction !== lastDirection) {	//If cursor is moved enough pixels and in a different direction than already set
+					lastDirection = direction;
+					sortRowsByColumn(col, direction);
+				}
+			};
+			th.onpointerup = () => { th.onpointermove = null; th.onpointerup = null; };	//Clean after letting go
+		}
+	</script>
+</body>
+</html>
 
