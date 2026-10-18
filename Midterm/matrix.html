@@ -14,38 +14,64 @@
 		const NUM_ROWS = 30, NUM_COLS = 40, PULL_THRESHOLD = 20;
 		const matrix = Array.from({ length: NUM_ROWS }, () =>
 			Array.from({ length: NUM_COLS }, () => Math.floor(Math.random() * 100)));	// 0-99 matrix[row][col]
-        
-        // save a copy of the prginal tsble for reseting
-        const originalMatrix = matrix.map((row) => [...row]);
+
+		// save a copy of the original table for reseting
+		const originalMatrix = matrix.map((row) => [...row]);
 
 		const thead = document.querySelector("thead");
 		const tbody = document.querySelector("tbody");
 
 		const headerRow = thead.insertRow();
 		headerRow.insertCell().outerHTML = "<th></th>";
+		const colHeaders = [];
 		for (let col = 0; col < NUM_COLS; col++) {
 			const th = document.createElement("th");
 			th.textContent = "Col" + (col + 1);
 			th.addEventListener("pointerdown", (event) => startPull(event, th, col));
 			headerRow.append(th);
+			colHeaders.push(th);
 		}
 
+		const cellElements = [];	//Store elements independent of display order
 		const rowElements = matrix.map((values, row) => {
 			const tr = tbody.insertRow();
 			const label = document.createElement("th");
 			label.textContent = "Row" + (row + 1);
+			label.addEventListener("pointerdown", (event) => startRowPull(event, label, row));
 			tr.append(label);
-			values.forEach((value) => {
+			const tds = values.map((value) => {
 				const td = tr.insertCell();
 				td.textContent = value;
 				td.style.background = `hsl(210, 70%, ${95 - value * 0.5}%)`;
+				return td;
 			});
+			cellElements.push(tds);
 			return tr;
 		});
 
 		function sortRowsByColumn(col, direction) {
 			const order = matrix.map((_, row) => row).sort((a, b) => direction * (matrix[a][col] - matrix[b][col]) || a - b);	//Direction 1 ascending, -1 descending
 			tbody.append(...order.map((row) => rowElements[row]));
+		}
+
+		function applyColumnOrder(order) {
+			headerRow.append(...order.map((col) => colHeaders[col]));
+			rowElements.forEach((tr, row) => {
+				tr.append(...order.map((col) => cellElements[row][col]));
+			});
+		}
+
+		function sortColumnsByRow(row, direction) {
+			const order = matrix[row].map((_, col) => col).sort((a, b) => direction * (matrix[row][a] - matrix[row][b]) || a - b);	//Direction 1 ascending, -1 descending
+			applyColumnOrder(order);
+		}
+
+		function restoreColumnOrder() {
+			applyColumnOrder(Array.from({ length: NUM_COLS }, (_, col) => col));
+		}
+
+		function restoreRowOrder() {
+			tbody.append(...rowElements);
 		}
 
 		function startPull(event, th, col) {
@@ -64,87 +90,104 @@
 			th.onpointerup = () => { th.onpointermove = null; th.onpointerup = null; };	//Clean after letting go
 		}
 
-        // add keyboard functionality 
+		function startRowPull(event, th, row) {
+			const startX = event.clientX;
+			let lastDirection = 0;
+			th.setPointerCapture(event.pointerId);
 
-        function refreshTableDOM() {
-            matrix.forEach((values, row) => {
-                const tr = rowElements[row];
-                const tds = tr.querySelectorAll("td");
-                values.forEach((value, col) => {
-                    tds[col].textContent = value;
-                    tds[col].style.background = `hsl(210, 70%, ${95 - value * 0.5}%)`;
-                });
-            });
-        }
+			th.onpointermove = (moveEvent) => {
+				const pull = moveEvent.clientX - startX;
+				const direction = pull > PULL_THRESHOLD ? 1 : pull < -PULL_THRESHOLD ? -1 : 0;	//Direction 1 ascending (pull right), -1 descending (pull left)
+				if (direction !== 0 && direction !== lastDirection) {
+					lastDirection = direction;
+					sortColumnsByRow(row, direction);
+				}
+			};
+			th.onpointerup = () => { th.onpointermove = null; th.onpointerup = null; };
+		}
 
-        function sortAllColumns(direction) {
-            for (let c = 0; c < NUM_COLS; c++) {
-                const colValues = matrix.map(row => row[c]).sort((a, b) => direction * (a - b));
-                matrix.forEach((row, r) => { row[c] = colValues[r]; });
-            }
-            refreshTableDOM();
-        }
+		// add keyboard functionality
+		function refreshTableDOM() {
+			matrix.forEach((values, row) => {
+				values.forEach((value, col) => {
+					const td = cellElements[row][col];
+					td.textContent = value;
+					td.style.background = `hsl(210, 70%, ${95 - value * 0.5}%)`;
+				});
+			});
+		}
 
-        function sortAllRows(direction) {
-            matrix.forEach(row => {
-                row.sort((a, b) => direction * (a - b));
-            });
-            refreshTableDOM();
-        }
+		function sortAllColumns(direction) {
+			for (let c = 0; c < NUM_COLS; c++) {
+				const colValues = matrix.map(row => row[c]).sort((a, b) => direction * (a - b));
+				matrix.forEach((row, r) => { row[c] = colValues[r]; });
+			}
+			restoreRowOrder();
+			refreshTableDOM();
+		}
 
-        function sortAll(direction) {
-            const allValues = matrix.flat().sort((a, b) => direction * (a - b));
-            let index = 0;
-            for (let r = 0; r < NUM_ROWS; r++) {
-                for (let c = 0; c < NUM_COLS; c++) {
-                    matrix[r][c] = allValues[index++];
-                }
-            }
-            const originalOrder = Array.from({ length: NUM_ROWS }, (_, i) => i);
-            tbody.append(...originalOrder.map((row) => rowElements[row]));
-            refreshTableDOM();
-        }
+		function sortAllRows(direction) {
+			matrix.forEach(row => {
+				row.sort((a, b) => direction * (a - b));
+			});
+			restoreColumnOrder();
+			refreshTableDOM();
+		}
 
-        function resetTable() {
-            for (let r = 0; r < NUM_ROWS; r++) {
-                for (let c = 0; c < NUM_COLS; c++) {
-                    matrix[r][c] = originalMatrix[r][c];
-                }
-            }
-            const originalOrder = Array.from({ length: NUM_ROWS }, (_, i) => i);
-            tbody.append(...originalOrder.map((row) => rowElements[row]));
-            refreshTableDOM();
-        }
+		function sortAll(direction) {
+			const allValues = matrix.flat().sort((a, b) => direction * (a - b));
+			let index = 0;
+			for (let r = 0; r < NUM_ROWS; r++) {
+				for (let c = 0; c < NUM_COLS; c++) {
+					matrix[r][c] = allValues[index++];
+				}
+			}
+			const originalOrder = Array.from({ length: NUM_ROWS }, (_, i) => i);
+			tbody.append(...originalOrder.map((row) => rowElements[row]));
+			restoreColumnOrder();
+			refreshTableDOM();
+		}
 
-        // keyboard listener
-        document.addEventListener("keydown", (event) => {
-            switch (event.key) {
-                case "ArrowUp":
-                    sortAllColumns(1);
-                    break;
-                case "ArrowDown":
-                    sortAllColumns(-1);
-                    break;
-                case "ArrowLeft":
-                    sortAllRows(-1);
-                    break;
-                case "ArrowRight":
-                    sortAllRows(1);
-                    break;
-                case "a":
-                    sortAll(1);
-                    break;
-                case "d":
-                    sortAll(-1);
-                    break;
-                case "Escape":
-                    resetTable();
-                    break;
-            }
-        });
+		function resetTable() {
+			for (let r = 0; r < NUM_ROWS; r++) {
+				for (let c = 0; c < NUM_COLS; c++) {
+					matrix[r][c] = originalMatrix[r][c];
+				}
+			}
+			const originalOrder = Array.from({ length: NUM_ROWS }, (_, i) => i);
+			tbody.append(...originalOrder.map((row) => rowElements[row]));
+			restoreColumnOrder();
+			refreshTableDOM();
+		}
+
+		// keyboard listener
+		document.addEventListener("keydown", (event) => {
+			switch (event.key) {
+				case "ArrowUp":
+					sortAllColumns(1);
+					break;
+				case "ArrowDown":
+					sortAllColumns(-1);
+					break;
+				case "ArrowLeft":
+					sortAllRows(-1);
+					break;
+				case "ArrowRight":
+					sortAllRows(1);
+					break;
+				case "a":
+					sortAll(1);
+					break;
+				case "d":
+					sortAll(-1);
+					break;
+				case "Escape":
+					resetTable();
+					break;
+			}
+		});
 
 
 	</script>
 </body>
 </html>
-
