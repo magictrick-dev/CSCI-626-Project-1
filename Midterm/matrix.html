@@ -5,8 +5,24 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>Matrix</title>
 	<style>
-		table { border-collapse: collapse; user-select: none; touch-action: none; }	/* Remove text highlights and interaction */
+		table { 
+			border-collapse: separate; 
+			border-spacing: 0;
+			user-select: none; 
+			touch-action: none; 
+		}	/* Remove text highlights and interaction */
 		th { background: #eee; font-weight: bold; }
+		thead tr:first-child th {
+			writing-mode: vertical-rl;
+			padding-top: 8px;
+			padding-bottom: 8px;
+		}
+
+		tbody th {
+			padding-left: 4px;
+			padding-right: 4px;
+		}
+
 		thead th { cursor: ns-resize; }		/* column headers are pulled up/down (north south) */
 		tbody th { cursor: ew-resize; }		/* row headers are pulled left/right (east west) */
 		thead th:first-child { cursor: default; }	/* The empty top-left corner cell is not pullable */
@@ -14,7 +30,14 @@
 		/* Sort line highlights */
 		th.key { background: #ffe0b2; }	/* The header the matrix is currently sorted by */
 		th .arrow { color: #e65100; margin-left: 2px; }
-		td { --col-shadow: 0 0 #0000; --row-shadow: 0 0 #0000; box-shadow: var(--col-shadow), var(--row-shadow); }	/* Handle intersection highlighting */
+		td { 
+			height: 32px;
+			width: 32px;
+			--col-shadow: 0 0 #0000; 
+			--row-shadow: 0 0 #0000; 
+			box-shadow: var(--col-shadow), var(--row-shadow); 
+			text-align: center;
+		}	/* Handle intersection highlighting */
 		td.key-col { --col-shadow: inset 2px 0 0 #e65100, inset -2px 0 0 #e65100; }	/* Left/right edges of the key column */
 		td.key-row { --row-shadow: inset 0 2px 0 #e65100, inset 0 -2px 0 #e65100; }	/* Top/bottom edges of the key row */
 
