@@ -148,12 +148,25 @@
 	<div class="min-h-10">&nbsp;</div>
 	<div class="max-w-4xl mx-auto py-4 text-white">
 		<div class="bg-gray-950 border border-gray-700 rounded-md p-2 px-4">
-			<h3 class="text-2xl">Sorting Instructions</h3>
-			<ul class="list-disc list-inside">
-				<li><strong class="">Mouse Drag:</strong> Drag a column header up/down to sort rows, or a row header left/right to sort columns.</li>
-				<li><strong class="">Arrow Keys:</strong> Up/Down sorts all columns independently; Left/Right sorts all rows independently.</li>
-				<li><strong class="">A / D Keys:</strong> Sorts the entire matrix globally (Ascending / Descending).</li>
-				<li><strong class="">Escape Key:</strong> Resets the matrix to its original random state.</li>
+			<h3 class="text-4xl font-thin pb-2">Sorting Instructions</h3>
+			<ul class="list-disc list-inside text-gray-400 space-y-0.5 pb-2">
+				<li>
+					<strong class="text-white">Mouse Drag:</strong> 
+					Drag a column header up/down to sort rows, or a row header left/right to sort columns.
+					Pulling a selected column in the direction it sorts a tiny bit will deselect the column or row.
+				</li>
+				<li>
+					<strong class="text-white">Arrow Keys:</strong> 
+					Up/Down sorts all columns independently; Left/Right sorts all rows independently.
+				</li>
+				<li>
+					<strong class="text-white">A / D Keys:</strong> 
+					Sorts the entire matrix globally (Ascending / Descending).
+				</li>
+				<li>
+					<strong class="text-white">Escape Key:</strong> 
+					Resets the matrix to its original random state.
+				</li>
 			</ul>
 		</div>
 	</div>
@@ -170,7 +183,7 @@
 	</div>
 	<script>
 		const NUM_ROWS = 30, NUM_COLS = 40, PULL_THRESHOLD = 20;	// PULL_THRESHOLD: pixels a header must be pulled before it sorts
-		const DESELECT_PULL = 10;	// A tiny pull at least this long but shorter than PULL_THRESHOLD deselects the header
+		const DESELECT_PULL = 4;	// A tiny pull at least this long but shorter than PULL_THRESHOLD deselects the header
 		const matrix = Array.from({ length: NUM_ROWS }, () =>
 			Array.from({ length: NUM_COLS }, () => Math.floor(Math.random() * 100)));	// 0-99 matrix[row][col]
 
