@@ -4,23 +4,94 @@
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>Matrix</title>
+	<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 	<style>
 		table { 
 			border-collapse: separate; 
 			border-spacing: 0;
 			user-select: none; 
 			touch-action: none; 
+			font-variant-emoji: text;
 		}	/* Remove text highlights and interaction */
-		th { background: #eee; font-weight: bold; }
+
+		th { font-weight: bold; }
+
 		thead tr:first-child th {
 			writing-mode: vertical-rl;
 			padding-top: 8px;
 			padding-bottom: 8px;
+			min-height: 96px;
+			text-align: left;
+		}
+
+		thead tr:first-child th:not(:first-child):hover {
+			writing-mode: vertical-rl;
+			padding-top: 8px;
+			padding-bottom: 8px;
+			min-height: 96px;
+			text-align: left;
+			background-color: #e6510033;
+		}
+
+		
+		thead tr:first-child th:nth-child(even) {
+			background-color: var(--color-gray-900);
+			border-radius: 8px 8px 0px 0px;
+			color: white;
+		}
+
+		thead tr:first-child th:nth-child(odd) {
+			background-color: var(--color-gray-950);
+			border-radius: 8px 8px 0px 0px;
+			color: white;
+		}
+		
+		thead tr:first-child th.key
+		{
+			--col-shadow: 0 0 #0000; 
+			--row-shadow: 0 0 #0000; 
+			box-shadow: var(--col-shadow), var(--row-shadow); 
+ 			--col-shadow: inset 1px 1px 0 #e65100, inset -1px -1px 0 #e65100; 
+			border-radius: 8px 8px 0px 0px;
+			background-color: #e6510066!important;
 		}
 
 		tbody th {
 			padding-left: 4px;
 			padding-right: 4px;
+			min-width: 96px;
+			color: var(--color-gray-200);
+			text-align:left;
+		}
+
+		tbody th:hover {
+			padding-left: 4px;
+			padding-right: 4px;
+			min-width: 96px;
+			color: var(--color-gray-200);
+			text-align:left;
+			background-color: #e6510033!important;
+		}
+		
+		tbody tr:nth-child(odd) th {
+			background-color: var(--color-gray-900);
+			border-radius: 8px 0px 0px 8px;
+			color: white;
+		}
+
+		tbody tr:nth-child(even) th {
+			background-color: var(--color-gray-950);
+			border-radius: 8px 0px 0px 8px;
+			color: white;
+		}
+
+		tbody th.key {
+			--col-shadow: 0 0 #0000; 
+			--row-shadow: 0 0 #0000; 
+			box-shadow: var(--col-shadow), var(--row-shadow); 
+ 			--row-shadow: inset 1px 1px 0 #e65100, inset -1px -1px 0 #e65100; 
+			border-radius: 8px 0px 0px 8px;
+			background-color: #e6510066!important;
 		}
 
 		thead th { cursor: ns-resize; }		/* column headers are pulled up/down (north south) */
@@ -28,26 +99,30 @@
 		thead th:first-child { cursor: default; }	/* The empty top-left corner cell is not pullable */
 
 		/* Sort line highlights */
-		th.key { background: #ffe0b2; }	/* The header the matrix is currently sorted by */
+		th.key { 
+			background: #ffe0b2; color: black;  
+		}	/* The header the matrix is currently sorted by */
+
 		th .arrow { color: #e65100; margin-left: 2px; }
 		td { 
-			height: 32px;
-			width: 32px;
+			padding: 4px;
+			min-height: 24px;
+			min-width: 24px;
 			--col-shadow: 0 0 #0000; 
 			--row-shadow: 0 0 #0000; 
 			box-shadow: var(--col-shadow), var(--row-shadow); 
 			text-align: center;
 		}	/* Handle intersection highlighting */
-		td.key-col { --col-shadow: inset 2px 0 0 #e65100, inset -2px 0 0 #e65100; }	/* Left/right edges of the key column */
-		td.key-row { --row-shadow: inset 0 2px 0 #e65100, inset 0 -2px 0 #e65100; }	/* Top/bottom edges of the key row */
+		td.key-col { --col-shadow: inset 1px 0 0 #e65100, inset -1px 0 0 #e65100; }	/* Left/right edges of the key column */
+		td.key-row { --row-shadow: inset 0 1px 0 #e65100, inset 0 -1px 0 #e65100; }	/* Top/bottom edges of the key row */
 
 		/* Header pull arrows */
 		#pull-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
-		#pull-line { display: none; stroke: #455a64; stroke-width: 3; stroke-opacity: 0.75; }	/* Hidden until a pull starts */
-		#pull-arrow-head { fill: #455a64; fill-opacity: 0.75; }
+		#pull-line { display: none; stroke: #e65100; stroke-width: 3; stroke-opacity: 0.90; }	/* Hidden until a pull starts */
+		#pull-arrow-head { fill: #e65100; fill-opacity: 1.00; }
 	</style>
 </head>
-<body>
+<body class="bg-gray-900 min-h-dvh">
 	<svg id="pull-overlay">
 		<defs>
 			<marker id="pull-arrow-head" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="5" markerHeight="5" orient="auto">
@@ -56,13 +131,28 @@
 		</defs>
 		<line id="pull-line" marker-end="url(#pull-arrow-head)"/>
 	</svg>
-	<table>
-		<thead></thead>
-		<tbody></tbody>
-	</table>
+	<div class="min-h-10">&nbsp;</div>
+	<div class="max-w-4xl mx-auto py-4 text-white">
+		<div class="bg-gray-950 border border-gray-700 rounded-md p-2">
+			<p>
+				Hello world.
+			</p>
+		</div>
+	</div>
+	<div class="max-w-6xl mx-auto flex justify-center">
+		<div class="p-4 bg-gray-950 rounded-md border border-gray-700">
+			<table class="bg-gray-950">
+				<thead class="text-gray-200"></thead>
+				<tbody></tbody>
+			</table>
+		</div>
+	</div>
+	<div class="min-h-50">
+			&nbsp;
+	</div>
 	<script>
 		const NUM_ROWS = 30, NUM_COLS = 40, PULL_THRESHOLD = 20;	// PULL_THRESHOLD: pixels a header must be pulled before it sorts
-		const DESELECT_PULL = 2;	// A tiny pull at least this long but shorter than PULL_THRESHOLD deselects the header
+		const DESELECT_PULL = 10;	// A tiny pull at least this long but shorter than PULL_THRESHOLD deselects the header
 		const matrix = Array.from({ length: NUM_ROWS }, () =>
 			Array.from({ length: NUM_COLS }, () => Math.floor(Math.random() * 100)));	// 0-99 matrix[row][col]
 
