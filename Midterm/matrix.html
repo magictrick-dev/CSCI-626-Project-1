@@ -174,8 +174,8 @@
 				<li>
 					<strong class="text-white">Region Select:</strong>
 					Drag across cells to select a region; while it is outlined, the arrow keys and A / D sort only inside it.
-					Clicking off the table removes the highlight but keeps the outline and sorted values.
-					Clicking a cell, selecting a new region, or pulling a header restores the old region's values.
+					Clicking a single cell or off the table removes the highlight but keeps the outline and sorted values.
+					Selecting a new region or pulling a header restores the old region's values.
 				</li>
 				<li>
 					<strong class="text-white">Arrow Keys:</strong>
@@ -450,32 +450,31 @@
 
 		function startRegionSelect(event, td) {	// Drag across cells to select a rectangular region
 			if (event.button !== 0) return;	// Primary button / touch / pen only
-			clearRegion();	// Selecting a new region restores the old one first
+			deactivateRegion();	// A single-cell click only drops the old region's tint; it is restored once a drag starts a new region
 			beginPull(event, td);
 
 			const rowOrder = displayedRowOrder(), colOrder = displayedColumnOrder();
 			const rowTops = [...tbody.rows].map((tr) => tr.getBoundingClientRect().top + window.scrollY);	// Page coordinates of each displayed row / column, so scrolling mid-drag is harmless
 			const colLefts = colOrder.map((col) => colHeaders[col].getBoundingClientRect().left + window.scrollX);
 			const anchorRow = td.parentElement.sectionRowIndex, anchorCol = td.cellIndex - 1;	// Displayed position the drag started on (cell 0 is the row header)
-			let focusRow = anchorRow, focusCol = anchorCol;
-
-			region = { rows: [], cols: [], snapshot: matrix.map((row) => [...row]), active: true };
-			const updateRegion = () => {
-				region.rows = rowOrder.slice(Math.min(anchorRow, focusRow), Math.max(anchorRow, focusRow) + 1);
-				region.cols = colOrder.slice(Math.min(anchorCol, focusCol), Math.max(anchorCol, focusCol) + 1);
-				highlightRegion();
-			};
-			updateRegion();
+			let focusRow = anchorRow, focusCol = anchorCol, selecting = false;	// selecting: the drag has left the starting cell and replaced the old region
 
 			td.onpointermove = (moveEvent) => {
 				const row = bandAt(rowTops, moveEvent.pageY), col = bandAt(colLefts, moveEvent.pageX);
 				if (row === focusRow && col === focusCol) return;	// Still over the same cell
 				focusRow = row;
 				focusCol = col;
-				updateRegion();
+				if (!selecting) {	// First move off the starting cell: restore the old region and start a new one
+					selecting = true;
+					clearRegion();
+					region = { rows: [], cols: [], snapshot: matrix.map((values) => [...values]), active: true };
+				}
+				region.rows = rowOrder.slice(Math.min(anchorRow, focusRow), Math.max(anchorRow, focusRow) + 1);
+				region.cols = colOrder.slice(Math.min(anchorCol, focusCol), Math.max(anchorCol, focusCol) + 1);
+				highlightRegion();
 			};
 			td.onpointerup = td.onpointercancel = () => {
-				if (focusRow === anchorRow && focusCol === anchorCol) clearRegion();	// A click without a drag selects nothing
+				if (selecting && focusRow === anchorRow && focusCol === anchorCol) clearRegion();	// Dragged back onto the starting cell: select nothing
 				endPull(td);
 			};
 		}
