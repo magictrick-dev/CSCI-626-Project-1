@@ -38,7 +38,7 @@
 		<tbody></tbody>
 	</table>
 	<script>
-		const NUM_ROWS = 30, NUM_COLS = 40, PULL_THRESHOLD = 20;
+		const NUM_ROWS = 30, NUM_COLS = 40, PULL_THRESHOLD = 20, DESELECT_PULL = 2;
 		const matrix = Array.from({ length: NUM_ROWS }, () =>
 			Array.from({ length: NUM_COLS }, () => Math.floor(Math.random() * 100)));	// 0-99 matrix[row][col]
 
@@ -176,13 +176,21 @@
 
 		document.addEventListener("dragstart", (event) => event.preventDefault());	//Stop drag-and-drop from overriding pulls
 
+		function endPull(th) {	//Clean after letting go
+			th.onpointermove = null;
+			th.onpointerup = null;
+			th.onpointercancel = null;
+			hidePullArrow();
+		}
+
 		function startPull(event, th, col) {
 			const startX = event.clientX, startY = event.clientY;
-			let lastDirection = 0;
+			let lastDirection = 0, maxPull = 0;
 			beginPull(event, th);
 
 			th.onpointermove = (moveEvent) => {
 				const pull = moveEvent.clientY - startY;
+				maxPull = Math.max(maxPull, Math.abs(pull));
 				if (Math.abs(pull) > 4) showPullArrow(startX, startY, startX, moveEvent.clientY);
 				const direction = pull > PULL_THRESHOLD ? 1 : pull < -PULL_THRESHOLD ? -1 : 0;	//Direction 1 ascending (pull down), -1 descending (pull up), 0 (pull nowhere or left/right)
 				if (direction !== 0 && direction !== lastDirection) {	//If cursor is moved enough pixels and in a different direction than already set
@@ -190,16 +198,21 @@
 					sortRowsByColumn(col, direction);
 				}
 			};
-			th.onpointerup = th.onpointercancel = () => { th.onpointermove = null; th.onpointerup = null; th.onpointercancel = null; hidePullArrow(); };	//Clean after letting go
+			th.onpointerup = () => {
+				if (lastDirection === 0 && maxPull >= DESELECT_PULL && sortedColumn === col) clearSortedColumn();	//Tiny pull below the threshold but above the minimum deselects a header
+				endPull(th);
+			};
+			th.onpointercancel = () => endPull(th);
 		}
 
 		function startRowPull(event, th, row) {
 			const startX = event.clientX, startY = event.clientY;
-			let lastDirection = 0;
+			let lastDirection = 0, maxPull = 0;
 			beginPull(event, th);
 
 			th.onpointermove = (moveEvent) => {
 				const pull = moveEvent.clientX - startX;
+				maxPull = Math.max(maxPull, Math.abs(pull));
 				if (Math.abs(pull) > 4) showPullArrow(startX, startY, moveEvent.clientX, startY);	//Horizontal arrow from where the pull began
 				const direction = pull > PULL_THRESHOLD ? 1 : pull < -PULL_THRESHOLD ? -1 : 0;	//Direction 1 ascending (pull right), -1 descending (pull left)
 				if (direction !== 0 && direction !== lastDirection) {
@@ -207,7 +220,11 @@
 					sortColumnsByRow(row, direction);
 				}
 			};
-			th.onpointerup = th.onpointercancel = () => { th.onpointermove = null; th.onpointerup = null; th.onpointercancel = null; hidePullArrow(); };	//Clean after letting go
+			th.onpointerup = () => {
+				if (lastDirection === 0 && maxPull >= DESELECT_PULL && sortedRow === row) clearSortedRow();	//Tiny pull below the threshold but above the minimum deselects a header
+				endPull(th);
+			};
+			th.onpointercancel = () => endPull(th);
 		}
 
 		// add keyboard functionality
