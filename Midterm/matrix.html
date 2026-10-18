@@ -4,8 +4,35 @@
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>Matrix</title>
+	<style>
+		table { border-collapse: collapse; user-select: none; touch-action: none; }	/*remove text highlights and interaction */
+		th { background: #eee; font-weight: bold; }
+		thead th { cursor: ns-resize; }
+		tbody th { cursor: ew-resize; }
+		thead th:first-child { cursor: default; }
+
+		/* Sort line highlights */
+		th.key { background: #ffe0b2; }
+		th .arrow { color: #e65100; margin-left: 2px; }
+		td { --col-shadow: 0 0 #0000; --row-shadow: 0 0 #0000; box-shadow: var(--col-shadow), var(--row-shadow); }
+		td.key-col { --col-shadow: inset 2px 0 0 #e65100, inset -2px 0 0 #e65100; }	/* left/right edges of the key column */
+		td.key-row { --row-shadow: inset 0 2px 0 #e65100, inset 0 -2px 0 #e65100; }	/* top/bottom edges of the key row */
+
+		/* Header pull arrows */
+		#pull-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
+		#pull-line { display: none; stroke: #455a64; stroke-width: 3; stroke-opacity: 0.75; }
+		#pull-arrow-head { fill: #455a64; fill-opacity: 0.75; }
+	</style>
 </head>
 <body>
+	<svg id="pull-overlay">
+		<defs>
+			<marker id="pull-arrow-head" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+				<path d="M 0 0 L 10 5 L 0 10 z"/>
+			</marker>
+		</defs>
+		<line id="pull-line" marker-end="url(#pull-arrow-head)"/>
+	</svg>
 	<table>
 		<thead></thead>
 		<tbody></tbody>
@@ -21,12 +48,19 @@
 		const thead = document.querySelector("thead");
 		const tbody = document.querySelector("tbody");
 
+		function createArrowSpan() {	//invisible arrow element in each header
+			const span = document.createElement("span");
+			span.className = "arrow";
+			return span;
+		}
+
 		const headerRow = thead.insertRow();
 		headerRow.insertCell().outerHTML = "<th></th>";
 		const colHeaders = [];
 		for (let col = 0; col < NUM_COLS; col++) {
 			const th = document.createElement("th");
-			th.textContent = "Col" + (col + 1);
+			th.textContent = "Col " + (col + 1);
+			th.append(createArrowSpan());
 			th.addEventListener("pointerdown", (event) => startPull(event, th, col));
 			headerRow.append(th);
 			colHeaders.push(th);
@@ -36,7 +70,8 @@
 		const rowElements = matrix.map((values, row) => {
 			const tr = tbody.insertRow();
 			const label = document.createElement("th");
-			label.textContent = "Row" + (row + 1);
+			label.textContent = "Row " + (row + 1);
+			label.append(createArrowSpan());
 			label.addEventListener("pointerdown", (event) => startRowPull(event, label, row));
 			tr.append(label);
 			const tds = values.map((value) => {
@@ -49,9 +84,67 @@
 			return tr;
 		});
 
+		//Sort line highlights
+		let sortedColumn = null, sortedRow = null;
+
+		function markSortedColumn(col, direction) {
+			clearSortedColumn();
+			sortedColumn = col;
+			colHeaders[col].classList.add("key");
+			colHeaders[col].querySelector(".arrow").textContent = direction === 1 ? "▼" : "▲";
+			cellElements.forEach((tds) => tds[col].classList.add("key-col"));
+		}
+
+		function clearSortedColumn() {
+			if (sortedColumn === null) return;
+			colHeaders[sortedColumn].classList.remove("key");
+			colHeaders[sortedColumn].querySelector(".arrow").textContent = "";
+			cellElements.forEach((tds) => tds[sortedColumn].classList.remove("key-col"));
+			sortedColumn = null;
+		}
+
+		function markSortedRow(row, direction) {
+			clearSortedRow();
+			sortedRow = row;
+			const label = rowElements[row].firstChild;
+			label.classList.add("key");
+			label.querySelector(".arrow").textContent = direction === 1 ? "▶" : "◀";
+			cellElements[row].forEach((td) => td.classList.add("key-row"));
+		}
+
+		function clearSortedRow() {
+			if (sortedRow === null) return;
+			const label = rowElements[sortedRow].firstChild;
+			label.classList.remove("key");
+			label.querySelector(".arrow").textContent = "";
+			cellElements[sortedRow].forEach((td) => td.classList.remove("key-row"));
+			sortedRow = null;
+		}
+
+		function clearSortIndicators() {
+			clearSortedColumn();
+			clearSortedRow();
+		}
+
+		//Header Pull Arrow
+		const pullLine = document.getElementById("pull-line");
+
+		function showPullArrow(x1, y1, x2, y2) {
+			pullLine.setAttribute("x1", x1);
+			pullLine.setAttribute("y1", y1);
+			pullLine.setAttribute("x2", x2);
+			pullLine.setAttribute("y2", y2);
+			pullLine.style.display = "inline";
+		}
+
+		function hidePullArrow() {
+			pullLine.style.display = "none";
+		}
+
 		function sortRowsByColumn(col, direction) {
 			const order = matrix.map((_, row) => row).sort((a, b) => direction * (matrix[a][col] - matrix[b][col]) || a - b);	//Direction 1 ascending, -1 descending
 			tbody.append(...order.map((row) => rowElements[row]));
+			markSortedColumn(col, direction);
 		}
 
 		function applyColumnOrder(order) {
@@ -64,6 +157,7 @@
 		function sortColumnsByRow(row, direction) {
 			const order = matrix[row].map((_, col) => col).sort((a, b) => direction * (matrix[row][a] - matrix[row][b]) || a - b);	//Direction 1 ascending, -1 descending
 			applyColumnOrder(order);
+			markSortedRow(row, direction);
 		}
 
 		function restoreColumnOrder() {
@@ -74,36 +168,46 @@
 			tbody.append(...rowElements);
 		}
 
-		function startPull(event, th, col) {
-			const startY = event.clientY;
-			let lastDirection = 0;
+		function beginPull(event, th) {
+			event.preventDefault();
+			window.getSelection().removeAllRanges();
 			th.setPointerCapture(event.pointerId);
+		}
+
+		document.addEventListener("dragstart", (event) => event.preventDefault());	//Stop drag-and-drop from overriding pulls
+
+		function startPull(event, th, col) {
+			const startX = event.clientX, startY = event.clientY;
+			let lastDirection = 0;
+			beginPull(event, th);
 
 			th.onpointermove = (moveEvent) => {
 				const pull = moveEvent.clientY - startY;
+				if (Math.abs(pull) > 4) showPullArrow(startX, startY, startX, moveEvent.clientY);
 				const direction = pull > PULL_THRESHOLD ? 1 : pull < -PULL_THRESHOLD ? -1 : 0;	//Direction 1 ascending (pull down), -1 descending (pull up), 0 (pull nowhere or left/right)
 				if (direction !== 0 && direction !== lastDirection) {	//If cursor is moved enough pixels and in a different direction than already set
 					lastDirection = direction;
 					sortRowsByColumn(col, direction);
 				}
 			};
-			th.onpointerup = () => { th.onpointermove = null; th.onpointerup = null; };	//Clean after letting go
+			th.onpointerup = th.onpointercancel = () => { th.onpointermove = null; th.onpointerup = null; th.onpointercancel = null; hidePullArrow(); };	//Clean after letting go
 		}
 
 		function startRowPull(event, th, row) {
-			const startX = event.clientX;
+			const startX = event.clientX, startY = event.clientY;
 			let lastDirection = 0;
-			th.setPointerCapture(event.pointerId);
+			beginPull(event, th);
 
 			th.onpointermove = (moveEvent) => {
 				const pull = moveEvent.clientX - startX;
+				if (Math.abs(pull) > 4) showPullArrow(startX, startY, moveEvent.clientX, startY);	//Horizontal arrow from where the pull began
 				const direction = pull > PULL_THRESHOLD ? 1 : pull < -PULL_THRESHOLD ? -1 : 0;	//Direction 1 ascending (pull right), -1 descending (pull left)
 				if (direction !== 0 && direction !== lastDirection) {
 					lastDirection = direction;
 					sortColumnsByRow(row, direction);
 				}
 			};
-			th.onpointerup = () => { th.onpointermove = null; th.onpointerup = null; };
+			th.onpointerup = th.onpointercancel = () => { th.onpointermove = null; th.onpointerup = null; th.onpointercancel = null; hidePullArrow(); };	//Clean after letting go
 		}
 
 		// add keyboard functionality
@@ -123,6 +227,7 @@
 				matrix.forEach((row, r) => { row[c] = colValues[r]; });
 			}
 			restoreRowOrder();
+			clearSortIndicators();
 			refreshTableDOM();
 		}
 
@@ -131,6 +236,7 @@
 				row.sort((a, b) => direction * (a - b));
 			});
 			restoreColumnOrder();
+			clearSortIndicators();
 			refreshTableDOM();
 		}
 
@@ -145,6 +251,7 @@
 			const originalOrder = Array.from({ length: NUM_ROWS }, (_, i) => i);
 			tbody.append(...originalOrder.map((row) => rowElements[row]));
 			restoreColumnOrder();
+			clearSortIndicators();
 			refreshTableDOM();
 		}
 
@@ -157,9 +264,9 @@
 			const originalOrder = Array.from({ length: NUM_ROWS }, (_, i) => i);
 			tbody.append(...originalOrder.map((row) => rowElements[row]));
 			restoreColumnOrder();
+			clearSortIndicators();
 			refreshTableDOM();
 		}
-
 		// keyboard listener
 		document.addEventListener("keydown", (event) => {
 			switch (event.key) {
@@ -186,8 +293,6 @@
 					break;
 			}
 		});
-
-
 	</script>
 </body>
 </html>
