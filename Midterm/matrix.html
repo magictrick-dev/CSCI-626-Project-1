@@ -4,27 +4,11 @@
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>Matrix</title>
+	<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 	<style>
-		body {
-			font-family: sans-serif;
-			margin: 20px;
-			background: #fdfdfd;
-			color: #333;
-		}
-		.instructions {
-			background: #f5f7f9;
-            border: 1px solid #d1d5db;
-            border-radius: 6px;
-            padding: 12px 16px;
-            margin-bottom: 20px;
-            max-width: 900px;
-            font-size: 14px;
-            line-height: 1.5;
-        }
         .instructions h3 {
             margin: 0 0 6px 0;
             font-size: 15px;
-            color: #1f2937;
         }
         .instructions ul {
             margin: 0;
@@ -33,22 +17,96 @@
         .instructions li {
             margin-bottom: 4px;
         }
+
 		table { 
 			border-collapse: separate; 
 			border-spacing: 0;
 			user-select: none; 
 			touch-action: none; 
+			font-variant-emoji: text;
 		}	/* Remove text highlights and interaction */
-		th { background: #eee; font-weight: bold; }
+
+		table:focus { outline: none; }	/* The panel border below shows focus instead of the browser's ring */
+		div:has(> table:focus) { border-color: #e6510066; }	/* Orange panel border while the table is focused and capturing the arrow keys */
+
+		th { font-weight: bold; }
+
 		thead tr:first-child th {
 			writing-mode: vertical-rl;
 			padding-top: 8px;
 			padding-bottom: 8px;
+			min-height: 96px;
+			text-align: left;
+		}
+
+		thead tr:first-child th:not(:first-child):hover {
+			writing-mode: vertical-rl;
+			padding-top: 8px;
+			padding-bottom: 8px;
+			min-height: 96px;
+			text-align: left;
+			background-color: #e6510033;
+		}
+
+		
+		thead tr:first-child th:nth-child(even) {
+			background-color: var(--color-gray-900);
+			border-radius: 8px 8px 0px 0px;
+			color: white;
+		}
+
+		thead tr:first-child th:nth-child(odd) {
+			background-color: var(--color-gray-950);
+			border-radius: 8px 8px 0px 0px;
+			color: white;
+		}
+		
+		thead tr:first-child th.key
+		{
+			--col-shadow: 0 0 #0000; 
+			--row-shadow: 0 0 #0000; 
+			box-shadow: var(--col-shadow), var(--row-shadow); 
+ 			--col-shadow: inset 1px 1px 0 #e65100, inset -1px -1px 0 #e65100; 
+			border-radius: 8px 8px 0px 0px;
+			background-color: #e6510066!important;
 		}
 
 		tbody th {
 			padding-left: 4px;
 			padding-right: 4px;
+			min-width: 96px;
+			color: var(--color-gray-200);
+			text-align:left;
+		}
+
+		tbody th:hover {
+			padding-left: 4px;
+			padding-right: 4px;
+			min-width: 96px;
+			color: var(--color-gray-200);
+			text-align:left;
+			background-color: #e6510033!important;
+		}
+		
+		tbody tr:nth-child(odd) th {
+			background-color: var(--color-gray-900);
+			border-radius: 8px 0px 0px 8px;
+			color: white;
+		}
+
+		tbody tr:nth-child(even) th {
+			background-color: var(--color-gray-950);
+			border-radius: 8px 0px 0px 8px;
+			color: white;
+		}
+
+		tbody th.key {
+			--col-shadow: 0 0 #0000; 
+			--row-shadow: 0 0 #0000; 
+			box-shadow: var(--col-shadow), var(--row-shadow); 
+ 			--row-shadow: inset 1px 1px 0 #e65100, inset -1px -1px 0 #e65100; 
+			border-radius: 8px 0px 0px 8px;
+			background-color: #e6510066!important;
 		}
 
 		thead th { cursor: ns-resize; }		/* column headers are pulled up/down (north south) */
@@ -56,34 +114,44 @@
 		thead th:first-child { cursor: default; }	/* The empty top-left corner cell is not pullable */
 
 		/* Sort line highlights */
-		th.key { background: #ffe0b2; }	/* The header the matrix is currently sorted by */
+		th.key { 
+			background: #ffe0b2; color: black;  
+		}	/* The header the matrix is currently sorted by */
+
 		th .arrow { color: #e65100; margin-left: 2px; }
 		td { 
-			height: 32px;
-			width: 32px;
-			--col-shadow: 0 0 #0000; 
-			--row-shadow: 0 0 #0000; 
-			box-shadow: var(--col-shadow), var(--row-shadow); 
+			padding: 4px;
+			min-height: 24px;
+			min-width: 24px;
+			--col-shadow: 0 0 #0000;
+			--row-shadow: 0 0 #0000;
+			--region-top: 0 0 #0000;
+			--region-bottom: 0 0 #0000;
+			--region-left: 0 0 #0000;
+			--region-right: 0 0 #0000;
+			--region-fill: 0 0 #0000;
+			box-shadow: var(--col-shadow), var(--row-shadow), var(--region-top), var(--region-bottom), var(--region-left), var(--region-right), var(--region-fill);
 			text-align: center;
+			cursor: cell;	/* Cells are dragged across to select a region */
 		}	/* Handle intersection highlighting */
-		td.key-col { --col-shadow: inset 2px 0 0 #e65100, inset -2px 0 0 #e65100; }	/* Left/right edges of the key column */
-		td.key-row { --row-shadow: inset 0 2px 0 #e65100, inset 0 -2px 0 #e65100; }	/* Top/bottom edges of the key row */
+		td.key-col { --col-shadow: inset 1px 0 0 #e65100, inset -1px 0 0 #e65100; }	/* Left/right edges of the key column */
+		td.key-row { --row-shadow: inset 0 1px 0 #e65100, inset 0 -1px 0 #e65100; }	/* Top/bottom edges of the key row */
+
+		/* Selected region: outline the region's outer edges, and tint every cell while the region is active */
+		td.region-fill { --region-fill: inset 0 0 0 100px #e6510040; }
+		td.region-top { --region-top: inset 0 2px 0 #e65100; }
+		td.region-bottom { --region-bottom: inset 0 -2px 0 #e65100; }
+		td.region-left { --region-left: inset 2px 0 0 #e65100; }
+		td.region-right { --region-right: inset -2px 0 0 #e65100; }
 
 		/* Header pull arrows */
 		#pull-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
-		#pull-line { display: none; stroke: #455a64; stroke-width: 3; stroke-opacity: 0.75; }	/* Hidden until a pull starts */
-		#pull-arrow-head { fill: #455a64; fill-opacity: 0.75; }
+		#pull-line { display: none; stroke: #e65100; stroke-width: 3; stroke-opacity: 0.90; }	/* Hidden until a pull starts */
+		#pull-arrow-head { fill: #e65100; fill-opacity: 1.00; }
 	</style>
 </head>
-<body>
+<body class="bg-gray-900 min-h-dvh">
 	<div class="instructions">
-		<h3>How to Sort</h3>
-        <ul>
-            <li><strong>Mouse Drag:</strong> Drag a column header up/down to sort rows, or a row header left/right to sort columns.</li>
-            <li><strong>Arrow Keys:</strong> Up/Down sorts all columns independently; Left/Right sorts all rows independently.</li>
-            <li><strong>A / D Keys:</strong> Sorts the entire matrix globally (Ascending / Descending).</li>
-            <li><strong>Escape Key:</strong> Resets the matrix to its original random state.</li>
-        </ul>
     </div>
 	<svg id="pull-overlay">
 		<defs>
@@ -93,13 +161,53 @@
 		</defs>
 		<line id="pull-line" marker-end="url(#pull-arrow-head)"/>
 	</svg>
-	<table>
-		<thead></thead>
-		<tbody></tbody>
-	</table>
+	<div class="min-h-10">&nbsp;</div>
+	<div class="max-w-4xl mx-auto py-4 text-white">
+		<div class="bg-gray-950 border border-gray-700 rounded-md p-2 px-4">
+			<h3 class="text-4xl font-thin pb-2">Sorting Instructions</h3>
+			<ul class="list-disc list-inside text-gray-400 space-y-0.5 pb-2">
+				<li>
+					<strong class="text-white">Mouse Drag:</strong> 
+					Drag a column header up/down to sort rows, or a row header left/right to sort columns.
+					Pulling a selected column in the direction it sorts a tiny bit will deselect the column or row.
+				</li>
+				<li>
+					<strong class="text-white">Region Select:</strong>
+					Drag across cells to select a region; while it is outlined, the arrow keys and A / D sort only inside it.
+					Clicking a single cell or off the table removes the highlight but keeps the outline and sorted values.
+					Selecting a new region or pulling a header restores the old region's values.
+				</li>
+				<li>
+					<strong class="text-white">Arrow Keys:</strong>
+					Up/Down sorts all columns independently; Left/Right sorts all rows independently.
+					After clicking the table, the arrow keys no longer scroll the page until you click off it.
+				</li>
+				<li>
+					<strong class="text-white">A / D Keys:</strong>
+					Sorts the entire matrix globally, or just the selected region (Ascending / Descending).
+				</li>
+				<li>
+					<strong class="text-white">Escape Key:</strong>
+					First removes the region's highlight, then restores the region's values and removes its outline,
+					then resets the matrix to its original random state.
+				</li>
+			</ul>
+		</div>
+	</div>
+	<div class="max-w-6xl mx-auto flex justify-center">
+		<div class="p-4 bg-gray-950 rounded-md border border-gray-700">
+			<table class="bg-gray-950" tabindex="0">
+				<thead class="text-gray-200"></thead>
+				<tbody></tbody>
+			</table>
+		</div>
+	</div>
+	<div class="min-h-50">
+			&nbsp;
+	</div>
 	<script>
 		const NUM_ROWS = 30, NUM_COLS = 40, PULL_THRESHOLD = 20;	// PULL_THRESHOLD: pixels a header must be pulled before it sorts
-		const DESELECT_PULL = 2;	// A tiny pull at least this long but shorter than PULL_THRESHOLD deselects the header
+		const DESELECT_PULL = 4;	// A tiny pull at least this long but shorter than PULL_THRESHOLD deselects the header
 		const matrix = Array.from({ length: NUM_ROWS }, () =>
 			Array.from({ length: NUM_COLS }, () => Math.floor(Math.random() * 100)));	// 0-99 matrix[row][col]
 
@@ -139,6 +247,7 @@
 				const td = tr.insertCell();
 				td.textContent = value;
 				td.style.background = `hsl(210, 70%, ${95 - value * 0.5}%)`;
+				td.addEventListener("pointerdown", (event) => startRegionSelect(event, td));	// Dragging across cells selects a region
 				return td;
 			});
 			cellElements.push(tds);
@@ -201,6 +310,7 @@
 		}
 
 		function sortRowsByColumn(col, direction) {
+			clearRegion();	// Reordering rows would scatter the region, so restore and deselect it first
 			const order = matrix.map((_, row) => row).sort((a, b) => direction * (matrix[a][col] - matrix[b][col]) || a - b);	//Direction 1 ascending, -1 descending
 			tbody.append(...order.map((row) => rowElements[row]));
 			markSortedColumn(col, direction);
@@ -214,6 +324,7 @@
 		}
 
 		function sortColumnsByRow(row, direction) {
+			clearRegion();	// Reordering columns would scatter the region, so restore and deselect it first
 			const order = matrix[row].map((_, col) => col).sort((a, b) => direction * (matrix[row][a] - matrix[row][b]) || a - b);	//Direction 1 ascending, -1 descending
 			applyColumnOrder(order);
 			markSortedRow(row, direction);
@@ -285,6 +396,89 @@
 			th.onpointercancel = () => endPull(th);
 		}
 
+		// Region selection
+		let region = null;	// { rows, cols, snapshot, active }: original row / column indexes in displayed order, the matrix values from before it was selected, and whether it is tinted (null = no region)
+
+		function displayedRowOrder() {	// displayedRowOrder()[position] = original row index shown at that position
+			return [...tbody.rows].map((tr) => rowElements.indexOf(tr));
+		}
+
+		function displayedColumnOrder() {	// displayedColumnOrder()[position] = original column index shown at that position
+			return [...headerRow.cells].slice(1).map((th) => colHeaders.indexOf(th));
+		}
+
+		function highlightRegion() {	// Outline the region's outer edges, and tint its cells while it is active
+			cellElements.flat().forEach((td) => td.classList.remove("region-fill", "region-top", "region-bottom", "region-left", "region-right"));
+			if (region === null) return;
+			region.rows.forEach((row, i) => {
+				region.cols.forEach((col, j) => {
+					const classes = cellElements[row][col].classList;
+					classes.toggle("region-fill", region.active);
+					classes.toggle("region-top", i === 0);
+					classes.toggle("region-bottom", i === region.rows.length - 1);
+					classes.toggle("region-left", j === 0);
+					classes.toggle("region-right", j === region.cols.length - 1);
+				});
+			});
+		}
+
+		function deactivateRegion() {	// Drop the region's tint, keeping its outline and sorted values
+			if (region === null) return;
+			region.active = false;
+			highlightRegion();
+		}
+
+		const table = document.querySelector("table");
+		table.addEventListener("pointerdown", () => table.focus({ preventScroll: true }));	// Focus by hand: the cell / header drags preventDefault, which blocks click-to-focus
+		document.addEventListener("pointerdown", (event) => {	// Clicking off the table deactivates the region
+			if (!table.contains(event.target)) deactivateRegion();
+		});
+
+		function clearRegion() {	// Deselect the region and restore the values the matrix had before it was selected
+			if (region === null) return;
+			region.snapshot.forEach((values, row) => values.forEach((value, col) => { matrix[row][col] = value; }));
+			region = null;
+			highlightRegion();
+			refreshTableDOM();
+		}
+
+		function bandAt(starts, position) {	// Index of the row / column band containing position, clamped to the first and last band
+			let index = 0;
+			while (index < starts.length - 1 && position >= starts[index + 1]) index++;
+			return index;
+		}
+
+		function startRegionSelect(event, td) {	// Drag across cells to select a rectangular region
+			if (event.button !== 0) return;	// Primary button / touch / pen only
+			deactivateRegion();	// A single-cell click only drops the old region's tint; it is restored once a drag starts a new region
+			beginPull(event, td);
+
+			const rowOrder = displayedRowOrder(), colOrder = displayedColumnOrder();
+			const rowTops = [...tbody.rows].map((tr) => tr.getBoundingClientRect().top + window.scrollY);	// Page coordinates of each displayed row / column, so scrolling mid-drag is harmless
+			const colLefts = colOrder.map((col) => colHeaders[col].getBoundingClientRect().left + window.scrollX);
+			const anchorRow = td.parentElement.sectionRowIndex, anchorCol = td.cellIndex - 1;	// Displayed position the drag started on (cell 0 is the row header)
+			let focusRow = anchorRow, focusCol = anchorCol, selecting = false;	// selecting: the drag has left the starting cell and replaced the old region
+
+			td.onpointermove = (moveEvent) => {
+				const row = bandAt(rowTops, moveEvent.pageY), col = bandAt(colLefts, moveEvent.pageX);
+				if (row === focusRow && col === focusCol) return;	// Still over the same cell
+				focusRow = row;
+				focusCol = col;
+				if (!selecting) {	// First move off the starting cell: restore the old region and start a new one
+					selecting = true;
+					clearRegion();
+					region = { rows: [], cols: [], snapshot: matrix.map((values) => [...values]), active: true };
+				}
+				region.rows = rowOrder.slice(Math.min(anchorRow, focusRow), Math.max(anchorRow, focusRow) + 1);
+				region.cols = colOrder.slice(Math.min(anchorCol, focusCol), Math.max(anchorCol, focusCol) + 1);
+				highlightRegion();
+			};
+			td.onpointerup = td.onpointercancel = () => {
+				if (selecting && focusRow === anchorRow && focusCol === anchorCol) clearRegion();	// Dragged back onto the starting cell: select nothing
+				endPull(td);
+			};
+		}
+
 		// Keyboard input functionality
 		function refreshTableDOM() {
 			matrix.forEach((values, row) => {
@@ -296,37 +490,61 @@
 			});
 		}
 
+		// Value sorts over a block of cells: rows / cols are original indexes, listed in the order they are displayed
+		const ALL_ROWS = Array.from({ length: NUM_ROWS }, (_, row) => row);
+		const ALL_COLS = Array.from({ length: NUM_COLS }, (_, col) => col);
+
+		function sortValuesInColumns(rows, cols, direction) {	// Sort each column's values top-to-bottom
+			cols.forEach((c) => {
+				const colValues = rows.map((r) => matrix[r][c]).sort((a, b) => direction * (a - b));
+				rows.forEach((r, i) => { matrix[r][c] = colValues[i]; });
+			});
+		}
+
+		function sortValuesInRows(rows, cols, direction) {	// Sort each row's values left-to-right
+			rows.forEach((r) => {
+				const rowValues = cols.map((c) => matrix[r][c]).sort((a, b) => direction * (a - b));
+				cols.forEach((c, i) => { matrix[r][c] = rowValues[i]; });
+			});
+		}
+
+		function sortValuesInBlock(rows, cols, direction) {	// Sort every value, filling left-to-right then top-to-bottom
+			const allValues = rows.flatMap((r) => cols.map((c) => matrix[r][c])).sort((a, b) => direction * (a - b));
+			let index = 0;
+			rows.forEach((r) => cols.forEach((c) => { matrix[r][c] = allValues[index++]; }));
+		}
+
 		function sortAllColumns(direction) {	// Keyboard: sort the values inside every column independently (1 = ascending, -1 = descending)
-			for (let c = 0; c < NUM_COLS; c++) {
-				const colValues = matrix.map(row => row[c]).sort((a, b) => direction * (a - b));
-				matrix.forEach((row, r) => { row[c] = colValues[r]; });
+			if (region !== null) {
+				sortValuesInColumns(region.rows, region.cols, direction);	// Only inside the region; the row / column order stays put
+			} else {
+				sortValuesInColumns(ALL_ROWS, ALL_COLS, direction);
+				restoreRowOrder();
+				clearSortIndicators();
 			}
-			restoreRowOrder();
-			clearSortIndicators();
 			refreshTableDOM();
 		}
 
 		function sortAllRows(direction) {	// Keyboard: sort the values inside every row independently (1 = ascending, -1 = descending)
-			matrix.forEach(row => {
-				row.sort((a, b) => direction * (a - b));
-			});
-			restoreColumnOrder()
-			clearSortIndicators();
+			if (region !== null) {
+				sortValuesInRows(region.rows, region.cols, direction);	// Only inside the region; the row / column order stays put
+			} else {
+				sortValuesInRows(ALL_ROWS, ALL_COLS, direction);
+				restoreColumnOrder();
+				clearSortIndicators();
+			}
 			refreshTableDOM();
 		}
 
-		function sortAll(direction) {	// Keyboard: sort every value in the whole matrix
-			const allValues = matrix.flat().sort((a, b) => direction * (a - b));
-			let index = 0;
-			for (let r = 0; r < NUM_ROWS; r++) {
-				for (let c = 0; c < NUM_COLS; c++) {
-					matrix[r][c] = allValues[index++];
-				}
+		function sortAll(direction) {	// Keyboard: sort every value in the whole matrix (or just the region)
+			if (region !== null) {
+				sortValuesInBlock(region.rows, region.cols, direction);	// Only inside the region; the row / column order stays put
+			} else {
+				sortValuesInBlock(ALL_ROWS, ALL_COLS, direction);
+				restoreRowOrder();
+				restoreColumnOrder();
+				clearSortIndicators();
 			}
-			const originalOrder = Array.from({ length: NUM_ROWS }, (_, i) => i);
-			tbody.append(...originalOrder.map((row) => rowElements[row]));
-			restoreColumnOrder();
-			clearSortIndicators();
 			refreshTableDOM();
 		}
 
@@ -344,6 +562,7 @@
 		}
 
 		document.addEventListener("keydown", (event) => {	// Keyboard listeners
+			if (event.key.startsWith("Arrow") && document.activeElement === table) event.preventDefault();	// While the table is focused, arrows only sort and don't scroll the page
 			switch (event.key) {
 				case "ArrowUp":	// Sort columns ascending
 					sortAllColumns(1);
@@ -363,8 +582,10 @@
 				case "d":	// Sort whole matrix descending
 					sortAll(-1);
 					break;
-				case "Escape":	// Reset matrix
-					resetTable();
+				case "Escape":	// Drop the region's tint first, then restore and deselect the region, then reset the whole matrix
+					if (region?.active) deactivateRegion();
+					else if (region !== null) clearRegion();
+					else resetTable();
 					break;
 			}
 		});
